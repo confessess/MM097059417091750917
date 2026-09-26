@@ -190,7 +190,7 @@ do
 	
 	Tabs.MainTab:Paragraph({
 		Title = "Light Hub",
-		Desc = "Ctrl M to toggle the gui.",
+		Desc = "Ctrl M to toggle script on and off.",
 		Image = "rbxassetid://81641581642129",
 		ImageSize = 48
 	});
