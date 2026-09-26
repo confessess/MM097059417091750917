@@ -59,7 +59,7 @@ do
 	WindUI:Popup({
 		Title = gradient("Murder Mystery 2", Color3.fromHex("#eb1010"), Color3.fromHex("#1023eb")),
 		Icon = "rbxassetid://72462144048455",
-		Content = gradient("This script made by", Color3.fromHex("#10eb3c"), Color3.fromHex("#67c97a"))   .. gradient(" BorutoDEV", Color3.fromHex("#001e80"), Color3.fromHex("#16f2d9")) ,
+		Content = gradient("Updates in", Color3.fromHex("#10eb3c"), Color3.fromHex("#67c97a"))   .. gradient("discord.gg/feuds", Color3.fromHex("#001e80"), Color3.fromHex("#16f2d9")) ,
 		Buttons = {
 			{
 				Title = gradient("Cancel", Color3.fromHex("#e80909"), Color3.fromHex("#630404")),
@@ -90,58 +90,18 @@ do
 	local Window = WindUI:CreateWindow({
 		Title = gradient("Murder Mystery 2 [SUMMER UPDATE]", Color3.fromHex("#001e80"), Color3.fromHex("#ffea00")),
 		Icon = "rbxassetid://72462144048455",
-		Author = gradient("BorutoDEV", Color3.fromHex("#1bf2b2"), Color3.fromHex("#1bcbf2")),
+		Author = gradient("discord.gg/feuds", Color3.fromHex("#1bf2b2"), Color3.fromHex("#1bcbf2")),
 		Folder = "MM2WindUI",
-		Size = UDim2.fromOffset(560, 440),
+		Size = UDim2.fromOffset(350, 400),
 		Transparent = true,
 		Theme = "Dark",
-		SideBarWidth = 180,
+		SideBarWidth = 200,
 		UserEnabled = true,
 		HasOutline = true
 	});
-
-	--// AirFlow reskin (injected) — repaints WindUI with the AirFlow palette
-	task.defer(function()
-		local function recolor(v, hex)
-			if typeof(v) == "Color3" then
-				return Color3.fromHex(hex)
-			elseif type(v) == "string" and v:sub(1, 1) == "#" then
-				return hex
-			end
-			return v
-		end
-		local ok, theme = pcall(function()
-			local t = WindUI:GetCurrentTheme()
-			local out = {}
-			for k, v in pairs(t) do
-				local lk = string.lower(tostring(k))
-				local isColor = (typeof(v) == "Color3") or (type(v) == "string" and v:sub(1, 1) == "#")
-				if isColor then
-					if lk:find("accent") then
-						v = recolor(v, "#7a5cff")
-					elseif lk:find("background") then
-						v = recolor(v, "#0d0d12")
-					elseif lk:find("element") then
-						v = recolor(v, "#16161d")
-					elseif lk:find("outline") or lk:find("stroke") or lk:find("border") then
-						v = recolor(v, "#2a2a35")
-					elseif lk:find("text") then
-						v = recolor(v, "#ffffff")
-					end
-				end
-				out[k] = v
-			end
-			return out
-		end)
-		if ok and type(theme) == "table" then
-			pcall(function()
-				WindUI:SetTheme(theme)
-			end)
-		end
-	end);
 	
 	Window:EditOpenButton({
-		Title = "Open Daddy's UI",
+		Title = "Open UI",
 		Icon = "rbxassetid://72462144048455",
 		CornerRadius = UDim.new(2, 6),
 		StrokeThickness = 2,
@@ -229,8 +189,8 @@ do
 	});
 	
 	Tabs.MainTab:Paragraph({
-		Title = "MM2 Script v2.0 FIXED",
-		Desc = "Welcome to BorutoDEV's Murder Mystery 2 Script!\n\nPress Ctrl+M to toggle the script on/off.\nAll features are organized by role tabs.",
+		Title = "Light Hub",
+		Desc = "Ctrl M to toggle the gui.",
 		Image = "rbxassetid://72462144048455",
 		ImageSize = 48
 	});
@@ -2442,8 +2402,8 @@ Features:
 	});
 	
 	Tabs.SocialsTab:Paragraph({
-		Title = "BorutoDEV Made This Script",
-		Desc = "Please follow me on Roblox and subscribe to my YouTube channel! Your support helps me make more scripts.\n(Please follow me in the description lol idk)",
+		Title = "Discord.gg/feuds",
+		Desc = "Join the discord for future updates",
 		Image = "rbxassetid://72462144048455",
 		ImageSize = 64
 	});
@@ -2453,12 +2413,12 @@ Features:
 	});
 	
 	Tabs.SocialsTab:Button({
-		Title = "Copy YouTube",
+		Title = "Join discord",
 		Callback = function()
-			if pcall(setclipboard, "https://www.youtube.com/@bxrutodev") then
+			if pcall(setclipboard, "discord.gg/feuds") then
 				WindUI:Notify({
 					Title = "Copied!",
-					Content = "YouTube link copied! Please go sub!",
+					Content = "Discord link copied! Join up!",
 					Icon = "check-circle",
 					Duration = 3
 				});
@@ -2466,19 +2426,7 @@ Features:
 		end
 	});
 	
-	Tabs.SocialsTab:Button({
-		Title = "Copy Roblox",
-		Callback = function()
-			if pcall(setclipboard, "https://www.roblox.com/users/3814718003/profile") then
-				WindUI:Notify({
-					Title = "Copied!",
-					Content = "Roblox profile copied! Please follow me!",
-					Icon = "check-circle",
-					Duration = 3
-				});
-			end
-		end
-	});
+	
 	
 	-- ==========================================
 	-- CONFIGURATION TAB
