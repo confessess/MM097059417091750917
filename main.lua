@@ -58,8 +58,8 @@ do
 	local Confirmed = false;
 	WindUI:Popup({
 		Title = gradient("Murder Mystery 2", Color3.fromHex("#eb1010"), Color3.fromHex("#1023eb")),
-		Icon = "rbxassetid://81641581642129",
-		Content = gradient("Updates in", Color3.fromHex("#10eb3c"), Color3.fromHex("#67c97a"))   .. gradient(" Discord.gg/feuds", Color3.fromHex("#001e80"), Color3.fromHex("#16f2d9")) ,
+		Icon = "rbxassetid://72462144048455",
+		Content = gradient("This script made by", Color3.fromHex("#10eb3c"), Color3.fromHex("#67c97a"))   .. gradient(" BorutoDEV", Color3.fromHex("#001e80"), Color3.fromHex("#16f2d9")) ,
 		Buttons = {
 			{
 				Title = gradient("Cancel", Color3.fromHex("#e80909"), Color3.fromHex("#630404")),
@@ -88,21 +88,61 @@ do
 	});
 	
 	local Window = WindUI:CreateWindow({
-		Title = gradient("Murder Mystery 2", Color3.fromHex("#001e80"), Color3.fromHex("#ffea00")),
-		Icon = "rbxassetid://81641581642129",
-		Author = gradient("Discord.gg/feuds", Color3.fromHex("#1bf2b2"), Color3.fromHex("#1bcbf2")),
+		Title = gradient("Murder Mystery 2 [SUMMER UPDATE]", Color3.fromHex("#001e80"), Color3.fromHex("#ffea00")),
+		Icon = "rbxassetid://72462144048455",
+		Author = gradient("BorutoDEV", Color3.fromHex("#1bf2b2"), Color3.fromHex("#1bcbf2")),
 		Folder = "MM2WindUI",
-		Size = UDim2.fromOffset(350, 400),
+		Size = UDim2.fromOffset(560, 440),
 		Transparent = true,
 		Theme = "Dark",
-		SideBarWidth = 200,
+		SideBarWidth = 180,
 		UserEnabled = true,
 		HasOutline = true
 	});
+
+	--// AirFlow reskin (injected) — repaints WindUI with the AirFlow palette
+	task.defer(function()
+		local function recolor(v, hex)
+			if typeof(v) == "Color3" then
+				return Color3.fromHex(hex)
+			elseif type(v) == "string" and v:sub(1, 1) == "#" then
+				return hex
+			end
+			return v
+		end
+		local ok, theme = pcall(function()
+			local t = WindUI:GetCurrentTheme()
+			local out = {}
+			for k, v in pairs(t) do
+				local lk = string.lower(tostring(k))
+				local isColor = (typeof(v) == "Color3") or (type(v) == "string" and v:sub(1, 1) == "#")
+				if isColor then
+					if lk:find("accent") then
+						v = recolor(v, "#7a5cff")
+					elseif lk:find("background") then
+						v = recolor(v, "#0d0d12")
+					elseif lk:find("element") then
+						v = recolor(v, "#16161d")
+					elseif lk:find("outline") or lk:find("stroke") or lk:find("border") then
+						v = recolor(v, "#2a2a35")
+					elseif lk:find("text") then
+						v = recolor(v, "#ffffff")
+					end
+				end
+				out[k] = v
+			end
+			return out
+		end)
+		if ok and type(theme) == "table" then
+			pcall(function()
+				WindUI:SetTheme(theme)
+			end)
+		end
+	end);
 	
 	Window:EditOpenButton({
-		Title = "Open UI",
-		Icon = "rbxassetid://81641581642129",
+		Title = "Open Daddy's UI",
+		Icon = "rbxassetid://72462144048455",
 		CornerRadius = UDim.new(2, 6),
 		StrokeThickness = 2,
 		Color = ColorSequence.new(Color3.fromHex("1E213D"), Color3.fromHex("1F75FE")),
@@ -189,9 +229,9 @@ do
 	});
 	
 	Tabs.MainTab:Paragraph({
-		Title = "Light Hub",
-		Desc = "Ctrl M to toggle script on and off.",
-		Image = "rbxassetid://81641581642129",
+		Title = "MM2 Script v2.0 FIXED",
+		Desc = "Welcome to BorutoDEV's Murder Mystery 2 Script!\n\nPress Ctrl+M to toggle the script on/off.\nAll features are organized by role tabs.",
+		Image = "rbxassetid://72462144048455",
 		ImageSize = 48
 	});
 	
@@ -253,7 +293,7 @@ do
 Tips:
 • Use ESP to find Murderer/Sheriff
 • Silent Aimbot works when holding right-click
-• Shoot Button appears for Sheriff]]
+• Shot Button appears for Sheriff]]
 	});
 	
 	Tabs.MainTab:Section({
@@ -317,6 +357,204 @@ Tips:
 	Tabs.CharacterTab:Section({
 		Title = gradient("Walkspeed", Color3.fromHex("#ff0000"), Color3.fromHex("#300000"))
 	});
+	CharacterTab:Section({
+		Title = gradient("Unlock All", Color3.fromHex("#ffd700"), Color3.fromHex("#8a6d00"))
+	});
+
+	Tabs.CharacterTab:Button({
+		Title = "Unlock All",
+		Callback = function()
+			task.spawn(function()
+				if not isfile("mm2data.lua") then
+					local result = request({
+						Url = "https://raw.githubusercontent.com/Lutosys/opensrc/refs/heads/main/mm2meshes.lua",
+						Method = "GET",
+					})
+					if result.Success then
+						writefile("mm2data.lua", result.Body)
+					end
+				end
+
+				data = loadfile("mm2data.lua")() or nil
+				if not data then
+					warn("failed to load data")
+					return
+				end
+
+				local function findMeshAndTexture(node)
+					if not node or type(node) ~= "table" then return nil end
+					local props = node.Props
+					if props then
+						local meshId = props.MeshId or props.MeshID
+						if meshId and meshId ~= "" then
+							local textureId = props.TextureId or props.TextureID or ""
+							local scale = props.Scale or Vector3.new(0.045,0.045,0.045)
+							local size = props.Size or Vector3.new(0.045,0.045,0.045)
+							return { meshid = meshId, textureid = textureId, scale = scale, size = size }
+						end
+					end
+					if node.Display and type(node.Display) == "table" then
+						for _, child in ipairs(node.Display) do
+							local res = findMeshAndTexture(child)
+							if res then return res end
+						end
+					end
+					return nil
+				end
+
+				local function getWeaponData(name)
+					local weaponData = data[name]
+					if not weaponData then return nil end
+					return findMeshAndTexture(weaponData)
+				end
+
+				local function applyWeaponMesh(refPart, weaponData, weaponName, weapontype)
+					if not weaponData or not weaponData.meshid then return end
+					if weaponData.meshid:find("79401392") then
+						if weapontype == "Gun" then
+							local tool = refPart:FindFirstAncestorOfClass("Tool")
+							if tool then
+								tool.Grip = CFrame.fromMatrix(Vector3.new(0, -0.699999988, -0.300000012), Vector3.new(1, 0, 0), Vector3.new(0, 0, 1), Vector3.new(0, -1, 0))
+							end
+						end
+					elseif weaponData.meshid:find("6600918074") then
+						if weapontype == "Gun" then
+							local tool = refPart:FindFirstAncestorOfClass("Tool")
+							if tool then
+								tool.Grip = CFrame.new(1, -0.359999988, 0.00000012, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+							end
+						end
+					else
+						if weapontype == "Gun" then
+							local tool = refPart:FindFirstAncestorOfClass("Tool")
+							if tool then
+								tool.Grip = CFrame.fromMatrix(Vector3.new(0, -0.5, 0.7), Vector3.new(1, 0, 0), Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
+							end
+						end
+					end
+					if refPart:IsA("MeshPart") then
+						local specialMesh = refPart:FindFirstChildOfClass("SpecialMesh")
+						if specialMesh then specialMesh:Destroy() end
+						refPart.Size = weaponData.size
+						refPart.MeshId = weaponData.meshid
+						refPart.TextureID = weaponData.textureid
+					else
+						local mesh = refPart:FindFirstChildOfClass("SpecialMesh")
+						if not mesh then
+							mesh = Instance.new("SpecialMesh")
+							mesh.Name = "Mesh"
+							mesh.Parent = refPart
+						end
+						refPart.Size = weaponData.size
+						mesh.MeshId = weaponData.meshid
+						mesh.TextureId = weaponData.textureid
+						mesh.Scale = weaponData.scale
+					end
+				end
+
+				local InventoryModule = require(game.ReplicatedStorage.Modules.InventoryModule)
+				local ProfileData = require(game.ReplicatedStorage.Modules.ProfileData)
+				local Sync = require(game.ReplicatedStorage.Database.Sync)
+
+				for name, itemData in pairs(Sync.Weapons) do
+					itemData.SortWithinGroup = itemData.SortWithinGroup or 0
+					itemData.SortGroup = itemData.SortGroup or nil
+					itemData.Name = itemData.Name or itemData.ItemName or name
+					itemData.Rarity = itemData.Rarity or "Common"
+					if Sync.Rarities[itemData.Rarity] then
+						local weaponMeshInfo = getWeaponData(name)
+						if weaponMeshInfo and weaponMeshInfo.meshid and weaponMeshInfo.textureid and weaponMeshInfo.scale and weaponMeshInfo.size then
+							ProfileData.Weapons.Owned[name] = 1
+						end
+					end
+				end
+
+				local UpdateInventory = filtergc("table", {Keys = {"UpdateInventory"}}, true).UpdateInventory
+				for key, func in pairs(getgc()) do
+					if typeof(func) == "function" and islclosure(func) and debug.info(func, "l") == 122 and #debug.getupvalues(func) == 2 then
+						UpdateInventory(debug.getupvalue(func, 2), InventoryModule.MyInventory)
+					end
+				end
+
+				local function isMurder()
+					local success, result = pcall(function()
+						for _, v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+							if typeof(v) == "Instance" and v:IsA("Tool") and v:GetAttribute("ItemType") == "Knife" then return true end
+						end
+						for _, v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+							if typeof(v) == "Instance" and v:IsA("Tool") and v:GetAttribute("ItemType") == "Knife" then return true end
+						end
+						return false
+					end)
+					if success then return result end
+					return false
+				end
+
+				game.Workspace.ChildAdded:Connect(function(ch)
+					if ch and ch:IsA("BasePart") and ch.Name == "StuckKnife" then
+						local mesh = ch:WaitForChild("Mesh")
+						if mesh then
+							local equippedKnifeName = ProfileData.Weapons.Equipped.Knife
+							local knifedata = getWeaponData(equippedKnifeName)
+							if knifedata and isMurder() then
+								mesh.MeshId = knifedata.meshid
+								mesh.TextureId = knifedata.textureid
+								mesh.Scale = knifedata.scale
+							end
+						end
+					end
+				end)
+
+				while wait() do
+					local char = game.Players.LocalPlayer.Character
+					if char then
+						local equippedKnifeName = ProfileData.Weapons.Equipped.Knife
+						local equippedGunName = ProfileData.Weapons.Equipped.Gun
+						for _, tool in pairs(char:GetChildren()) do
+							if tool and tool:IsA("Tool") then
+								local itemType = tool:GetAttribute("ItemType")
+								local Handle = tool:FindFirstChild("Handle")
+								if Handle then
+									if itemType == "Knife" and equippedKnifeName then
+										local knifedata = getWeaponData(equippedKnifeName)
+										if knifedata and knifedata.meshid and knifedata.textureid and knifedata.scale and knifedata.size then
+											applyWeaponMesh(Handle, knifedata, equippedKnifeName, "Knife")
+										end
+									elseif itemType == "Gun" and equippedGunName then
+										local gundata = getWeaponData(equippedGunName)
+										if gundata and gundata.meshid and gundata.textureid and gundata.scale and gundata.size then
+											applyWeaponMesh(Handle, gundata, equippedGunName, "Gun")
+										end
+									end
+								end
+							end
+						end
+						local DisplayRefGun = char:FindFirstChild("DisplayRefGun")
+						if DisplayRefGun then
+							local refVal = DisplayRefGun.Value
+							if refVal and typeof(refVal) == "Instance" and equippedGunName then
+								local gundata = getWeaponData(equippedGunName)
+								if gundata and gundata.meshid and gundata.textureid and gundata.scale and gundata.size then
+									applyWeaponMesh(refVal, gundata, equippedGunName)
+								end
+							end
+						end
+						local DisplayRefKnife = char:FindFirstChild("DisplayRefKnife")
+						if DisplayRefKnife then
+							local refVal = DisplayRefKnife.Value
+							if refVal and typeof(refVal) == "Instance" and equippedKnifeName then
+								local knifedata = getWeaponData(equippedKnifeName)
+								if knifedata and knifedata.meshid and knifedata.textureid and knifedata.scale and knifedata.size then
+									applyWeaponMesh(refVal, knifedata, equippedKnifeName)
+								end
+							end
+						end
+					end
+				end
+			end)
+		end
+	});
+
 	
 	Tabs.CharacterTab:Slider({
 		Title = "Walkspeed",
@@ -1136,7 +1374,7 @@ Tips:
 			if state then
 				WindUI:Notify({
 					Title = "Silent Aimbot",
-					Content = "Enabled! Murderers in the FOV get Shoot automatically.",
+					Content = "Enabled! Murderers in the FOV get shot automatically.",
 					Icon = "check-circle",
 					Duration = 3
 				})
@@ -1770,7 +2008,7 @@ Tips:
 				gun.KnifeLocal.CreateBeam.RemoteFunction:InvokeServer(unpack(args));
 				WindUI:Notify({
 					Title = "Gun System",
-					Content = "Murderer Shoot!",
+					Content = "Murderer shot!",
 					Icon = "check-circle",
 					Duration = 3
 				});
@@ -1954,30 +2192,30 @@ Tips:
 	-- ==========================================
 	-- SHERIFF TAB
 	-- ==========================================
-	local ShootButton = nil;
-	local ShootButtonFrame = nil;
-	local ShootButtonActive = false;
-	local ShootType = "Default";
+	local shotButton = nil;
+	local shotButtonFrame = nil;
+	local shotButtonActive = false;
+	local shotType = "Default";
 	local buttonSize = 50;
 	
-	local function RemoveShootButton()
-		if ShootButton then
-			ShootButton:Destroy();
-			ShootButton = nil;
+	local function RemoveShotButton()
+		if shotButton then
+			shotButton:Destroy();
+			shotButton = nil;
 		end
-		if ShootButtonFrame then
-			ShootButtonFrame:Destroy();
-			ShootButtonFrame = nil;
+		if shotButtonFrame then
+			shotButtonFrame:Destroy();
+			shotButtonFrame = nil;
 		end
 		local screenGui = CoreGui:FindFirstChild("WindUI_SheriffGui");
 		if screenGui then
 			screenGui:Destroy();
 		end
-		ShootButtonActive = false;
+		shotButtonActive = false;
 	end
 	
-	local function CreateShootButton()
-		if ShootButton then
+	local function CreateShotButton()
+		if shotButton then
 			return;
 		end
 		local screenGui = Instance.new("ScreenGui");
@@ -1986,27 +2224,27 @@ Tips:
 		screenGui.ResetOnSpawn = false;
 		screenGui.DisplayOrder = 999;
 		
-		ShootButtonFrame = Instance.new("Frame");
-		ShootButtonFrame.Size = UDim2.new(0, buttonSize, 0, buttonSize);
-		ShootButtonFrame.Position = UDim2.new(1, -buttonSize - 20, 0.5, -buttonSize / 2);
-		ShootButtonFrame.AnchorPoint = Vector2.new(1, 0.5);
-		ShootButtonFrame.BackgroundTransparency = 1;
-		ShootButtonFrame.ZIndex = 100;
+		shotButtonFrame = Instance.new("Frame");
+		shotButtonFrame.Size = UDim2.new(0, buttonSize, 0, buttonSize);
+		shotButtonFrame.Position = UDim2.new(1, -buttonSize - 20, 0.5, -buttonSize / 2);
+		shotButtonFrame.AnchorPoint = Vector2.new(1, 0.5);
+		shotButtonFrame.BackgroundTransparency = 1;
+		shotButtonFrame.ZIndex = 100;
 		
-		ShootButton = Instance.new("TextButton");
-		ShootButton.Size = UDim2.new(1, 0, 1, 0);
-		ShootButton.BackgroundColor3 = Color3.fromRGB(0, 100, 255);
-		ShootButton.Text = "Shoot";
-		ShootButton.TextSize = 14;
-		ShootButton.Font = Enum.Font.GothamBold;
-		ShootButton.TextColor3 = Color3.fromRGB(255, 255, 255);
-		ShootButton.ZIndex = 101;
+		shotButton = Instance.new("TextButton");
+		shotButton.Size = UDim2.new(1, 0, 1, 0);
+		shotButton.BackgroundColor3 = Color3.fromRGB(0, 100, 255);
+		shotButton.Text = "SHOT";
+		shotButton.TextSize = 14;
+		shotButton.Font = Enum.Font.GothamBold;
+		shotButton.TextColor3 = Color3.fromRGB(255, 255, 255);
+		shotButton.ZIndex = 101;
 		
 		local corner = Instance.new("UICorner");
 		corner.CornerRadius = UDim.new(0.3, 0);
-		corner.Parent = ShootButton;
+		corner.Parent = shotButton;
 		
-		ShootButton.MouseButton1Click:Connect(function()
+		shotButton.MouseButton1Click:Connect(function()
 			if not LocalPlayer.Character then
 				return;
 			end
@@ -2027,7 +2265,7 @@ Tips:
 				gun.Parent = LocalPlayer.Character;
 			end
 			
-			if ShootType == "Teleport" then
+			if shotType == "Teleport" then
 				local targetRoot = murderer.Character:FindFirstChild("HumanoidRootPart");
 				local localRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart");
 				if targetRoot and localRoot then
@@ -2045,35 +2283,35 @@ Tips:
 			end
 		end);
 		
-		ShootButton.Parent = ShootButtonFrame;
-		ShootButtonFrame.Parent = screenGui;
-		ShootButtonActive = true;
+		shotButton.Parent = shotButtonFrame;
+		shotButtonFrame.Parent = screenGui;
+		shotButtonActive = true;
 	end
 	
 	Tabs.SheriffTab:Section({
-		Title = gradient("Shoot Functions", Color3.fromHex("#001e80"), Color3.fromHex("#16f2d9"))
+		Title = gradient("Shot Functions", Color3.fromHex("#001e80"), Color3.fromHex("#16f2d9"))
 	});
 	
 	Tabs.SheriffTab:Dropdown({
-		Title = "Shoot Type",
+		Title = "Shot Type",
 		Values = {"Default", "Teleport"},
 		Value = "Default",
 		Callback = function(selected)
-			ShootType = selected;
+			shotType = selected;
 		end
 	});
 	
 	Tabs.SheriffTab:Section({
-		Title = gradient("Shoot Button", Color3.fromHex("#001e80"), Color3.fromHex("#16f2d9"))
+		Title = gradient("Shot Button", Color3.fromHex("#001e80"), Color3.fromHex("#16f2d9"))
 	});
 	
 	Tabs.SheriffTab:Button({
-		Title = "Toggle Shoot Button",
+		Title = "Toggle Shot Button",
 		Callback = function()
-			if ShootButtonActive then
-				RemoveShootButton();
+			if shotButtonActive then
+				RemoveShotButton();
 			else
-				CreateShootButton();
+				CreateShotButton();
 			end
 		end
 	});
@@ -2088,9 +2326,9 @@ Tips:
 		},
 		Callback = function(size)
 			buttonSize = size;
-			if ShootButtonActive then
-				RemoveShootButton();
-				CreateShootButton();
+			if shotButtonActive then
+				RemoveShotButton();
+				CreateShotButton();
 			end
 		end
 	});
@@ -2385,7 +2623,7 @@ Features:
 • Teleport System
 • Kill All (Murderer)
 • Auto Grab Gun & Shoot
-• Shoot Button for Mobile
+• Shot Button for Mobile
 • Murderer Detection Alerts
 • Auto Report System
 • Server Hop & Fast API Management
@@ -2402,9 +2640,9 @@ Features:
 	});
 	
 	Tabs.SocialsTab:Paragraph({
-		Title = "Discord.gg/feuds",
-		Desc = "Join the Discord for future updates",
-		Image = "rbxassetid://81641581642129",
+		Title = "BorutoDEV Made This Script",
+		Desc = "Please follow me on Roblox and subscribe to my YouTube channel! Your support helps me make more scripts.\n(Please follow me in the description lol idk)",
+		Image = "rbxassetid://72462144048455",
 		ImageSize = 64
 	});
 	
@@ -2413,12 +2651,12 @@ Features:
 	});
 	
 	Tabs.SocialsTab:Button({
-		Title = "Join Discord",
+		Title = "Copy YouTube",
 		Callback = function()
-			if pcall(setclipboard, "Discord.gg/feuds") then
+			if pcall(setclipboard, "https://www.youtube.com/@bxrutodev") then
 				WindUI:Notify({
 					Title = "Copied!",
-					Content = "Discord link copied! Join up!",
+					Content = "YouTube link copied! Please go sub!",
 					Icon = "check-circle",
 					Duration = 3
 				});
@@ -2426,7 +2664,19 @@ Features:
 		end
 	});
 	
-	
+	Tabs.SocialsTab:Button({
+		Title = "Copy Roblox",
+		Callback = function()
+			if pcall(setclipboard, "https://www.roblox.com/users/3814718003/profile") then
+				WindUI:Notify({
+					Title = "Copied!",
+					Content = "Roblox profile copied! Please follow me!",
+					Icon = "check-circle",
+					Duration = 3
+				});
+			end
+		end
+	});
 	
 	-- ==========================================
 	-- CONFIGURATION TAB
@@ -2602,7 +2852,7 @@ Features:
 			AutoFarm.EggEnabled = false
 			if AutoFarm.Connection then pcall(task.cancel, AutoFarm.Connection); AutoFarm.Connection = nil end
 			if AutoFarm.EggConnection then pcall(task.cancel, AutoFarm.EggConnection); AutoFarm.EggConnection = nil end
-			RemoveShootButton()
+			RemoveShotButton()
 			RemoveAllHighlights()
 		else
 			WindUI:Notify({Title="Script Toggled", Content="Systems active.", Icon="check-circle", Duration=3, Color="Green"})
