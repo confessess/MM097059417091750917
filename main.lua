@@ -357,7 +357,7 @@ Tips:
 	Tabs.CharacterTab:Section({
 		Title = gradient("Walkspeed", Color3.fromHex("#ff0000"), Color3.fromHex("#300000"))
 	});
-	CharacterTab:Section({
+	Tabs.CharacterTab:Section({
 		Title = gradient("Unlock All", Color3.fromHex("#ffd700"), Color3.fromHex("#8a6d00"))
 	});
 
