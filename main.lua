@@ -253,7 +253,7 @@ do
 Tips:
 • Use ESP to find Murderer/Sheriff
 • Silent Aimbot works when holding right-click
-• Shot Button appears for Sheriff]]
+• Shoot Button appears for Sheriff]]
 	});
 	
 	Tabs.MainTab:Section({
@@ -1136,7 +1136,7 @@ Tips:
 			if state then
 				WindUI:Notify({
 					Title = "Silent Aimbot",
-					Content = "Enabled! Murderers in the FOV get shot automatically.",
+					Content = "Enabled! Murderers in the FOV get Shoot automatically.",
 					Icon = "check-circle",
 					Duration = 3
 				})
@@ -1770,7 +1770,7 @@ Tips:
 				gun.KnifeLocal.CreateBeam.RemoteFunction:InvokeServer(unpack(args));
 				WindUI:Notify({
 					Title = "Gun System",
-					Content = "Murderer shot!",
+					Content = "Murderer Shoot!",
 					Icon = "check-circle",
 					Duration = 3
 				});
@@ -1954,30 +1954,30 @@ Tips:
 	-- ==========================================
 	-- SHERIFF TAB
 	-- ==========================================
-	local shotButton = nil;
-	local shotButtonFrame = nil;
-	local shotButtonActive = false;
-	local shotType = "Default";
+	local ShootButton = nil;
+	local ShootButtonFrame = nil;
+	local ShootButtonActive = false;
+	local ShootType = "Default";
 	local buttonSize = 50;
 	
-	local function RemoveShotButton()
-		if shotButton then
-			shotButton:Destroy();
-			shotButton = nil;
+	local function RemoveShootButton()
+		if ShootButton then
+			ShootButton:Destroy();
+			ShootButton = nil;
 		end
-		if shotButtonFrame then
-			shotButtonFrame:Destroy();
-			shotButtonFrame = nil;
+		if ShootButtonFrame then
+			ShootButtonFrame:Destroy();
+			ShootButtonFrame = nil;
 		end
 		local screenGui = CoreGui:FindFirstChild("WindUI_SheriffGui");
 		if screenGui then
 			screenGui:Destroy();
 		end
-		shotButtonActive = false;
+		ShootButtonActive = false;
 	end
 	
-	local function CreateShotButton()
-		if shotButton then
+	local function CreateShootButton()
+		if ShootButton then
 			return;
 		end
 		local screenGui = Instance.new("ScreenGui");
@@ -1986,27 +1986,27 @@ Tips:
 		screenGui.ResetOnSpawn = false;
 		screenGui.DisplayOrder = 999;
 		
-		shotButtonFrame = Instance.new("Frame");
-		shotButtonFrame.Size = UDim2.new(0, buttonSize, 0, buttonSize);
-		shotButtonFrame.Position = UDim2.new(1, -buttonSize - 20, 0.5, -buttonSize / 2);
-		shotButtonFrame.AnchorPoint = Vector2.new(1, 0.5);
-		shotButtonFrame.BackgroundTransparency = 1;
-		shotButtonFrame.ZIndex = 100;
+		ShootButtonFrame = Instance.new("Frame");
+		ShootButtonFrame.Size = UDim2.new(0, buttonSize, 0, buttonSize);
+		ShootButtonFrame.Position = UDim2.new(1, -buttonSize - 20, 0.5, -buttonSize / 2);
+		ShootButtonFrame.AnchorPoint = Vector2.new(1, 0.5);
+		ShootButtonFrame.BackgroundTransparency = 1;
+		ShootButtonFrame.ZIndex = 100;
 		
-		shotButton = Instance.new("TextButton");
-		shotButton.Size = UDim2.new(1, 0, 1, 0);
-		shotButton.BackgroundColor3 = Color3.fromRGB(0, 100, 255);
-		shotButton.Text = "SHOT";
-		shotButton.TextSize = 14;
-		shotButton.Font = Enum.Font.GothamBold;
-		shotButton.TextColor3 = Color3.fromRGB(255, 255, 255);
-		shotButton.ZIndex = 101;
+		ShootButton = Instance.new("TextButton");
+		ShootButton.Size = UDim2.new(1, 0, 1, 0);
+		ShootButton.BackgroundColor3 = Color3.fromRGB(0, 100, 255);
+		ShootButton.Text = "Shoot";
+		ShootButton.TextSize = 14;
+		ShootButton.Font = Enum.Font.GothamBold;
+		ShootButton.TextColor3 = Color3.fromRGB(255, 255, 255);
+		ShootButton.ZIndex = 101;
 		
 		local corner = Instance.new("UICorner");
 		corner.CornerRadius = UDim.new(0.3, 0);
-		corner.Parent = shotButton;
+		corner.Parent = ShootButton;
 		
-		shotButton.MouseButton1Click:Connect(function()
+		ShootButton.MouseButton1Click:Connect(function()
 			if not LocalPlayer.Character then
 				return;
 			end
@@ -2027,7 +2027,7 @@ Tips:
 				gun.Parent = LocalPlayer.Character;
 			end
 			
-			if shotType == "Teleport" then
+			if ShootType == "Teleport" then
 				local targetRoot = murderer.Character:FindFirstChild("HumanoidRootPart");
 				local localRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart");
 				if targetRoot and localRoot then
@@ -2045,35 +2045,35 @@ Tips:
 			end
 		end);
 		
-		shotButton.Parent = shotButtonFrame;
-		shotButtonFrame.Parent = screenGui;
-		shotButtonActive = true;
+		ShootButton.Parent = ShootButtonFrame;
+		ShootButtonFrame.Parent = screenGui;
+		ShootButtonActive = true;
 	end
 	
 	Tabs.SheriffTab:Section({
-		Title = gradient("Shot Functions", Color3.fromHex("#001e80"), Color3.fromHex("#16f2d9"))
+		Title = gradient("Shoot Functions", Color3.fromHex("#001e80"), Color3.fromHex("#16f2d9"))
 	});
 	
 	Tabs.SheriffTab:Dropdown({
-		Title = "Shot Type",
+		Title = "Shoot Type",
 		Values = {"Default", "Teleport"},
 		Value = "Default",
 		Callback = function(selected)
-			shotType = selected;
+			ShootType = selected;
 		end
 	});
 	
 	Tabs.SheriffTab:Section({
-		Title = gradient("Shot Button", Color3.fromHex("#001e80"), Color3.fromHex("#16f2d9"))
+		Title = gradient("Shoot Button", Color3.fromHex("#001e80"), Color3.fromHex("#16f2d9"))
 	});
 	
 	Tabs.SheriffTab:Button({
-		Title = "Toggle Shot Button",
+		Title = "Toggle Shoot Button",
 		Callback = function()
-			if shotButtonActive then
-				RemoveShotButton();
+			if ShootButtonActive then
+				RemoveShootButton();
 			else
-				CreateShotButton();
+				CreateShootButton();
 			end
 		end
 	});
@@ -2088,9 +2088,9 @@ Tips:
 		},
 		Callback = function(size)
 			buttonSize = size;
-			if shotButtonActive then
-				RemoveShotButton();
-				CreateShotButton();
+			if ShootButtonActive then
+				RemoveShootButton();
+				CreateShootButton();
 			end
 		end
 	});
@@ -2385,7 +2385,7 @@ Features:
 • Teleport System
 • Kill All (Murderer)
 • Auto Grab Gun & Shoot
-• Shot Button for Mobile
+• Shoot Button for Mobile
 • Murderer Detection Alerts
 • Auto Report System
 • Server Hop & Fast API Management
@@ -2602,7 +2602,7 @@ Features:
 			AutoFarm.EggEnabled = false
 			if AutoFarm.Connection then pcall(task.cancel, AutoFarm.Connection); AutoFarm.Connection = nil end
 			if AutoFarm.EggConnection then pcall(task.cancel, AutoFarm.EggConnection); AutoFarm.EggConnection = nil end
-			RemoveShotButton()
+			RemoveShootButton()
 			RemoveAllHighlights()
 		else
 			WindUI:Notify({Title="Script Toggled", Content="Systems active.", Icon="check-circle", Duration=3, Color="Green"})
