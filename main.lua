@@ -88,7 +88,7 @@ do
 	});
 	
 	local Window = WindUI:CreateWindow({
-		Title = gradient("Murder Mystery 2 [SUMMER UPDATE]", Color3.fromHex("#001e80"), Color3.fromHex("#ffea00")),
+		Title = gradient("Murder Mystery 2", Color3.fromHex("#001e80"), Color3.fromHex("#ffea00")),
 		Icon = "rbxassetid://81641581642129",
 		Author = gradient("Discord.gg/feuds", Color3.fromHex("#1bf2b2"), Color3.fromHex("#1bcbf2")),
 		Folder = "MM2WindUI",
