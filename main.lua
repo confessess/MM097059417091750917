@@ -58,7 +58,7 @@ do
 	local Confirmed = false;
 	WindUI:Popup({
 		Title = gradient("Murder Mystery 2", Color3.fromHex("#eb1010"), Color3.fromHex("#1023eb")),
-		Icon = "rbxassetid://72462144048455",
+		Icon = "rbxassetid://81641581642129",
 		Content = gradient("Updates in", Color3.fromHex("#10eb3c"), Color3.fromHex("#67c97a"))   .. gradient(" Discord.gg/feuds", Color3.fromHex("#001e80"), Color3.fromHex("#16f2d9")) ,
 		Buttons = {
 			{
@@ -89,7 +89,7 @@ do
 	
 	local Window = WindUI:CreateWindow({
 		Title = gradient("Murder Mystery 2 [SUMMER UPDATE]", Color3.fromHex("#001e80"), Color3.fromHex("#ffea00")),
-		Icon = "rbxassetid://72462144048455",
+		Icon = "rbxassetid://81641581642129",
 		Author = gradient("Discord.gg/feuds", Color3.fromHex("#1bf2b2"), Color3.fromHex("#1bcbf2")),
 		Folder = "MM2WindUI",
 		Size = UDim2.fromOffset(350, 400),
@@ -102,7 +102,7 @@ do
 	
 	Window:EditOpenButton({
 		Title = "Open UI",
-		Icon = "rbxassetid://72462144048455",
+		Icon = "rbxassetid://81641581642129",
 		CornerRadius = UDim.new(2, 6),
 		StrokeThickness = 2,
 		Color = ColorSequence.new(Color3.fromHex("1E213D"), Color3.fromHex("1F75FE")),
@@ -191,7 +191,7 @@ do
 	Tabs.MainTab:Paragraph({
 		Title = "Light Hub",
 		Desc = "Ctrl M to toggle the gui.",
-		Image = "rbxassetid://72462144048455",
+		Image = "rbxassetid://81641581642129",
 		ImageSize = 48
 	});
 	
@@ -2404,7 +2404,7 @@ Features:
 	Tabs.SocialsTab:Paragraph({
 		Title = "Discord.gg/feuds",
 		Desc = "Join the Discord for future updates",
-		Image = "rbxassetid://72462144048455",
+		Image = "rbxassetid://81641581642129",
 		ImageSize = 64
 	});
 	
