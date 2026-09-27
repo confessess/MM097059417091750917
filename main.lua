@@ -347,7 +347,6 @@ do
 		return best
 	end
 
-	-- FOV Circle
 	local MonoFovCircle = Drawing.new("Circle")
 	MonoFovCircle.Visible = false
 	MonoFovCircle.Thickness = 1.5
@@ -375,7 +374,6 @@ do
 		end
 	end)
 
-	-- Auto Kill (murderer knife kill)
 	local KNIFE_PARTS = { "HumanoidRootPart", "UpperTorso", "LowerTorso", "Torso", "Head" }
 	local function knifeKill(ev, targetChar)
 		if not (ev and targetChar) then return end
@@ -415,7 +413,6 @@ do
 		end
 	end)
 
-	-- Fly
 	local flyBV, flyBG
 	local function startFly()
 		local ch = LocalPlayer.Character; local hrp = getHRP(ch)
@@ -456,7 +453,6 @@ do
 		flyBG.CFrame = CurrentCamera.CFrame
 	end)
 
-	-- Infinite Jump
 	monoBind(UserInputService.JumpRequest, function()
 		if MonoFlags.infJump then
 			local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
@@ -464,7 +460,6 @@ do
 		end
 	end)
 
-	-- Fullbright
 	local lightStore = nil
 	local function setFullbright(on)
 		if on then
@@ -496,7 +491,6 @@ do
 		end
 	end
 
-	-- Murderer Notify
 	local MURD_RANGE = 50
 	local murdNotified = false
 	monoBind(RunService.Heartbeat, function()
@@ -514,7 +508,6 @@ do
 		end
 	end)
 
-	-- Kill Feed
 	local lastDead = {}
 	local function scanDeaths()
 		if not (CRC and CRC.PlayerData) then return end
@@ -538,7 +531,6 @@ do
 		end
 	end)
 
-	-- Fling
 	local flinging = false
 	local function flingPlayer(p)
 		if flinging then return false end
@@ -571,7 +563,6 @@ do
 		return true
 	end
 
-	-- Gun/Knife Through Walls
 	local wallSnapPos, wallFarPos, myHrpPos
 	local function wallAimPos()
 		local center = UserInputService:GetMouseLocation()
@@ -3776,10 +3767,19 @@ Features:
 		return true
 	end
 
-		-- ==========================================
+	-- ==========================================
+	-- MONO TAB UI
+	-- ==========================================
+		Title = "Fling Duration (sec)",
+		Value = { Min = 1, Max = 10, Default = 1 },
+		Callback = function(v) MonoFlags.flingSeconds = v end
+	})
+
+	-- ==========================================
 	-- MASTER TOGGLE / CLEANUP
 	-- ==========================================
 	local function SetSystemsEnabled(enabled)
+		ScriptEnabled = enabled
 		if not enabled then
 			if SilentAimbot.Connection then
 				SilentAimbot.Connection:Disconnect()
