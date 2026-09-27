@@ -186,6 +186,11 @@ do
 			Title = "THEMES",
 			Icon = "palette",
 			Desc = "Design and apply custom themes."
+		}),
+		MonoTab = Window:Tab({
+			Title = "MONO",
+			Icon = "zap",
+			Desc = "Advanced features from Mono MM2"
 		})
 	};
 	
