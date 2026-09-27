@@ -1223,7 +1223,7 @@ Tips:
 				elseif (ESPConfig.HighlightInnocent and IsAlive(player) and (player.Name ~= Murder) and (player.Name ~= Sheriff) and (player.Name ~= Hero)) then
 					color = Color3.fromRGB(0, 255, 0);
 					shouldHighlight = true;
-				elseif ((player.Name == Hero) and IsAlive(player) and not IsAlive(game.Players[Sheriff]) and (ESPConfig.HighlightSheriff or ESPConfig.NameESP or ESPConfig.BoxESP or ESPConfig.TracerESP)) then
+				elseif ((player.Name == Hero) and IsAlive(player) and (not Sheriff or not Players:FindFirstChild(Sheriff) or not IsAlive(Players:FindFirstChild(Sheriff))) and (ESPConfig.HighlightSheriff or ESPConfig.NameESP or ESPConfig.BoxESP or ESPConfig.TracerESP)) then
 					color = Color3.fromRGB(255, 250, 0);
 					shouldHighlight = true;
 				end
