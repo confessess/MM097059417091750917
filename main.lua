@@ -1466,7 +1466,7 @@ Tips:
 	local roleUpdateAccumulator = 0
 	local espRenderConn = RunService.RenderStepped:Connect(function(dt)
 		if not ScriptEnabled then return end
-		roleUpdateAccumulator += dt
+		roleUpdateAccumulator = roleUpdateAccumulator + dt
 		if roleUpdateAccumulator >= 0.5 then
 			roleUpdateAccumulator = 0
 			UpdateRoles()
