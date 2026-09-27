@@ -168,11 +168,6 @@ do
 	});
 	
 	local Tabs = {
-		MainTab = Window:Tab({
-			Title = "MAIN",
-			Icon = "terminal",
-			Desc = "Quick access and information"
-		}),
 		CharacterTab = Window:Tab({
 			Title = "CHARACTER",
 			Icon = "file-cog"
@@ -215,16 +210,6 @@ do
 		SettingsTab = Window:Tab({
 			Title = "SETTINGS",
 			Icon = "code"
-		}),
-		ChangelogsTab = Window:Tab({
-			Title = "CHANGELOGS",
-			Icon = "info",
-			Desc = "Update history and future plans"
-		}),
-		SocialsTab = Window:Tab({
-			Title = "SOCIALS",
-			Icon = "star",
-			Desc = "Connect with the developer"
 		}),
 		b = Window:Divider(),
 		WindowTab = Window:Tab({
@@ -697,110 +682,6 @@ do
 		end)
 	end
 
-	-- ==========================================
-	-- MAIN TAB CONTENT
-	-- ==========================================
-	Tabs.MainTab:Section({
-		Title = "Welcome"
-	});
-	
-	Tabs.MainTab:Paragraph({
-		Title = "Light Hub",
-		Desc = "Ctrl M to toggle script on and off.",
-		Image = "rbxassetid://81641581642129",
-		ImageSize = 48
-	});
-	
-	Tabs.MainTab:Section({
-		Title = "Quick Actions"
-	});
-	
-	Tabs.MainTab:Button({
-		Title = "Teleport to Lobby",
-		Callback = function()
-			local lobby = workspace:FindFirstChild("Lobby");
-			if lobby then
-				local spawnPoint = lobby:FindFirstChild("SpawnPoint") or lobby:FindFirstChildOfClass("SpawnLocation");
-				if not spawnPoint then
-					spawnPoint = lobby:FindFirstChildWhichIsA("BasePart") or lobby;
-				end
-				if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-					LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(spawnPoint.Position + Vector3.new(0, 3, 0));
-					WindUI:Notify({
-						Title = "Teleport",
-						Content = "Teleported to Lobby!",
-						Icon = "check-circle",
-						Duration = 2
-					});
-				end
-			else
-				WindUI:Notify({
-					Title = "Error",
-					Content = "Lobby not found!",
-					Icon = "x-circle",
-					Duration = 2
-				});
-			end
-		end
-	});
-	
-	Tabs.MainTab:Button({
-		Title = "Grab Gun (If Available)",
-		Callback = function()
-			WindUI:Notify({
-				Title = "Info",
-				Content = "Use Innocent tab for Gun features!",
-				Icon = "info",
-				Duration = 3
-			});
-		end
-	});
-	
-	Tabs.MainTab:Section({
-		Title = "Controls"
-	});
-	
-	Tabs.MainTab:Code({
-		Title = "Keybinds:",
-		Code = [[* Ctrl + M - Toggle Script On/Off
-* Auto shoot - Activate Silent Aimbot
-* GUI Tabs - Access all features
-
-Tips:
-* Use ESP to find Murderer/Sheriff
-* Silent Aimbot works when holding right-click
-* Shoot Button appears for Sheriff]]
-	});
-	
-	Tabs.MainTab:Section({
-		Title = "Status"
-	});
-	
-	local statusParagraph = Tabs.MainTab:Paragraph({
-		Title = "Current Status",
-		Desc = "Role: Checking...\nAlive: Yes\nScript: Active",
-		Image = "activity",
-		ImageSize = 32
-	});
-	
-	task.spawn(function()
-		while task.wait(2) do
-			local success, roles = pcall(function()
-				return ReplicatedStorage:FindFirstChild("GetPlayerData", true):InvokeServer();
-			end);
-			local roleText = "Unknown";
-			local isAlive = "Yes";
-			if success and roles and roles[LocalPlayer.Name] then
-				roleText = roles[LocalPlayer.Name].Role or "Unknown";
-				if roles[LocalPlayer.Name].Dead or roles[LocalPlayer.Name].Killed then
-					isAlive = "No";
-				end
-			end
-			statusParagraph:SetDesc("Role: " .. roleText .. "\nAlive: " .. isAlive .. "\nScript: Active | Toggle: Ctrl+M");
-		end
-	end);
-	
-	-- ==========================================
 	-- CHARACTER TAB
 	-- ==========================================
 	local CharacterSettings = {
@@ -3195,75 +3076,6 @@ Tips:
 		end
 	});
 	
-	-- ==========================================
-	-- CHANGELOGS TAB
-	-- ==========================================
-	Tabs.ChangelogsTab:Section({
-		Title = "Current Version"
-	});
-	
-	Tabs.ChangelogsTab:Code({
-		Title = "v2.0 - Fixed Update",
-		Code = [[
-Features:
-* Fixed connection tracking and cleanup
-* Fixed master Ctrl+M toggle state
-* Added Murderer Evasion System
-* Added Predictive Gun Dodging
-* Added advanced local protection tools
-* Improved nil-safety and role-update throttling
-* Full ESP (Murderer, Sheriff, Innocent, GunDrop)
-* Drawing ESP (Name, Box, Tracers)
-* Silent Aimbot (Hold Right Click)
-* Smooth Camera Aimbot (Spectate & Lock)
-* AutoFarm (Coins, Beach Balls, Eggs)
-* Teleport System
-* Kill All (Murderer)
-* Auto Grab Gun & Shoot
-* Shoot Button for Mobile
-* Murderer Detection Alerts
-* Auto Report System
-* Server Hop & Fast API Management
-* Theme Customization
-* Ctrl+M Toggle System
-]]
-	});
-	
-	-- ==========================================
-	-- SOCIALS TAB
-	-- ==========================================
-	Tabs.SocialsTab:Section({
-		Title = "Developer"
-	});
-	
-	Tabs.SocialsTab:Paragraph({
-		Title = "Discord.gg/feuds",
-		Desc = "Join the Discord for future updates",
-		Image = "rbxassetid://81641581642129",
-		ImageSize = 64
-	});
-	
-	Tabs.SocialsTab:Section({
-		Title = "Links"
-	});
-	
-	Tabs.SocialsTab:Button({
-		Title = "Join Discord",
-		Callback = function()
-			if pcall(setclipboard, "Discord.gg/feuds") then
-				WindUI:Notify({
-					Title = "Copied!",
-					Content = "Discord link copied! Join up!",
-					Icon = "check-circle",
-					Duration = 3
-				});
-			end
-		end
-	});
-	
-	
-	
-	-- ==========================================
 	-- CONFIGURATION TAB
 	-- ==========================================
 	Tabs.WindowTab:Section({
