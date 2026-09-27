@@ -25,6 +25,8 @@ do
 	local ScriptEnabled = true
 	local GUIVisible = true
 	local CtrlPressed = false
+	local GUIToggleButton = nil
+	local GUIToggleGui = nil
 	
 	-- Silent Aimbot Variables
 	local SilentAimbot = {
@@ -55,6 +57,52 @@ do
 		return result;
 	end
 	
+	-- GUI Toggle Button
+	local function CreateGUIToggleButton()
+		if GUIToggleGui then return end
+		GUIToggleGui = Instance.new("ScreenGui")
+		GUIToggleGui.Name = "LightHub_GUIToggle"
+		GUIToggleGui.ResetOnSpawn = false
+		GUIToggleGui.DisplayOrder = 1000
+		pcall(function()
+			if typeof(gethui) == "function" then GUIToggleGui.Parent = gethui()
+			else GUIToggleGui.Parent = game:GetService("CoreGui") end
+		end)
+
+		GUIToggleButton = Instance.new("TextButton")
+		GUIToggleButton.Size = UDim2.fromOffset(50, 50)
+		GUIToggleButton.Position = UDim2.new(0, 10, 0.5, -25)
+		GUIToggleButton.BackgroundColor3 = Color3.fromRGB(30, 64, 175)
+		GUIToggleButton.Text = "LH"
+		GUIToggleButton.TextSize = 18
+		GUIToggleButton.Font = Enum.Font.GothamBold
+		GUIToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+		GUIToggleButton.BorderSizePixel = 0
+		GUIToggleButton.Active = true
+		GUIToggleButton.Draggable = true
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 8)
+		corner.Parent = GUIToggleButton
+
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = Color3.fromRGB(59, 130, 246)
+		stroke.Thickness = 2
+		stroke.Parent = GUIToggleButton
+
+		GUIToggleButton.MouseButton1Click:Connect(function()
+			if GUIVisible then
+				Window:Close()
+				GUIVisible = false
+			else
+				Window:Open()
+				GUIVisible = true
+			end
+		end)
+
+		GUIToggleButton.Parent = GUIToggleGui
+	end
+
 	local Confirmed = false;
 	WindUI:Popup({
 		Title = "Murder Mystery 2",
@@ -108,6 +156,8 @@ do
 		HasOutline = true
 	});
 	
+	CreateGUIToggleButton()
+
 	Window:EditOpenButton({
 		Title = "Open UI",
 		Icon = "rbxassetid://81641581642129",
@@ -194,6 +244,473 @@ do
 		})
 	};
 	
+	-- ==========================================
+	-- MONO FEATURES BACKEND
+	-- ==========================================
+	local MonoFlags = {
+		silentAim = false, aimbot = false, showFov = false, autoKill = false,
+		gunWalls = false, knifeWalls = false, instantKnife = false,
+		fly = false, flySpeed = 60, infJump = false,
+		fullbright = false,
+		murdererNotify = false, killFeed = false,
+		flingPower = 10000, flingSeconds = 1,
+	}
+
+	local Lighting = game:GetService("Lighting")
+	local monoConns = {}
+	local function monoBind(sig, fn)
+		local c = sig:Connect(fn)
+		table.insert(monoConns, c)
+		return c
+	end
+
+	local function getHRP(ch) return ch and ch:FindFirstChild("HumanoidRootPart") end
+
+	local function monoNotify(title, content, icon, dur)
+		WindUI:Notify({ Title = title, Content = content, Icon = icon or "info", Duration = dur or 3 })
+	end
+
+	local CRC = nil
+	pcall(function() CRC = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("CurrentRoundClient")) end)
+	local function roundData(plr) return CRC and CRC.PlayerData and CRC.PlayerData[plr.Name] end
+
+	local function computeRole(plr)
+		local d = roundData(plr)
+		local r = d and d.Role
+		if r == "Murderer" then return "Murderer" end
+		if r == "Sheriff" or r == "Hero" then return r end
+		return r or "Innocent"
+	end
+
+	local function computeAlive(plr)
+		local d = roundData(plr); if d and d.Dead == true then return false end
+		local ch = plr.Character; local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+		return ch and hum and hum.Health > 0 and getHRP(ch)
+	end
+
+	local roleCache, aliveCache, cacheStamp = {}, {}, 0
+	local function sweepCaches()
+		local now = os.clock()
+		if now - cacheStamp > 0.05 then
+			table.clear(roleCache); table.clear(aliveCache); cacheStamp = now
+		end
+	end
+
+	local function roleOf(plr)
+		sweepCaches()
+		local v = roleCache[plr]
+		if v == nil then v = computeRole(plr); roleCache[plr] = v end
+		return v
+	end
+
+	local function alive(plr)
+		sweepCaches()
+		local v = aliveCache[plr]
+		if v == nil then v = computeAlive(plr) or false; aliveCache[plr] = v end
+		return v
+	end
+
+	local function myRole() return roleOf(LocalPlayer) end
+	local function isGunRole(role) return role == "Sheriff" or role == "Hero" end
+
+	local function findMurderer()
+		for _, p in ipairs(Players:GetPlayers()) do
+			if roleOf(p) == "Murderer" then return p end
+		end
+	end
+
+	local function findWeapon(n)
+		local ch = LocalPlayer.Character; local bp = LocalPlayer:FindFirstChildOfClass("Backpack")
+		return (ch and ch:FindFirstChild(n)) or (bp and bp:FindFirstChild(n))
+	end
+
+	local function equip(tool)
+		local ch = LocalPlayer.Character; local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+		if tool and hum and tool.Parent ~= ch then pcall(function() hum:EquipTool(tool) end) end
+	end
+
+	local aimFov = 120
+	local function fovTarget()
+		local mr = myRole()
+		local center = UserInputService:GetMouseLocation()
+		local best, bd
+		for _, p in ipairs(Players:GetPlayers()) do
+			if p ~= LocalPlayer and alive(p) then
+				local pr = roleOf(p)
+				if (mr == "Murderer") or (isGunRole(mr) and pr == "Murderer") then
+					local hrp = getHRP(p.Character)
+					if hrp then
+						local v, on = CurrentCamera:WorldToViewportPoint(hrp.Position)
+						if on and v.Z > 0 then
+							local d = (Vector2.new(v.X, v.Y) - center).Magnitude
+							if d <= aimFov and (not bd or d < bd) then bd, best = d, p end
+						end
+					end
+				end
+			end
+		end
+		return best
+	end
+
+	-- FOV Circle
+	local MonoFovCircle = Drawing.new("Circle")
+	MonoFovCircle.Visible = false
+	MonoFovCircle.Thickness = 1.5
+	MonoFovCircle.NumSides = 64
+	MonoFovCircle.Radius = aimFov
+	MonoFovCircle.Color = Color3.fromRGB(59, 130, 246)
+	MonoFovCircle.Filled = false
+
+	monoBind(RunService.RenderStepped, function()
+		if MonoFlags.showFov and (MonoFlags.aimbot or MonoFlags.silentAim) then
+			MonoFovCircle.Visible = true
+			MonoFovCircle.Radius = aimFov
+			MonoFovCircle.Position = UserInputService:GetMouseLocation()
+		else
+			MonoFovCircle.Visible = false
+		end
+		if MonoFlags.aimbot then
+			local t = fovTarget()
+			if t then
+				local th = t.Character:FindFirstChild("Head") or getHRP(t.Character)
+				if th then
+					CurrentCamera.CFrame = CurrentCamera.CFrame:Lerp(CFrame.new(CurrentCamera.CFrame.Position, th.Position), 0.45)
+				end
+			end
+		end
+	end)
+
+	-- Auto Kill (murderer knife kill)
+	local KNIFE_PARTS = { "HumanoidRootPart", "UpperTorso", "LowerTorso", "Torso", "Head" }
+	local function knifeKill(ev, targetChar)
+		if not (ev and targetChar) then return end
+		local ht = ev:FindFirstChild("HandleTouched"); local ks = ev:FindFirstChild("KnifeStabbed")
+		if not ht then return end
+		if ks then ks:FireServer() end
+		for _, pn in ipairs(KNIFE_PARTS) do
+			local part = targetChar:FindFirstChild(pn)
+			if part then ht:FireServer(part) return end
+		end
+	end
+
+	task.spawn(function()
+		while true do
+			pcall(function()
+				if MonoFlags.autoKill then
+					local role = myRole()
+					if role == "Murderer" then
+						local knife = findWeapon("Knife"); local ev = knife and knife:FindFirstChild("Events")
+						if ev then
+							equip(knife)
+							for _, tgt in ipairs(Players:GetPlayers()) do
+								if tgt ~= LocalPlayer and alive(tgt) then
+									knifeKill(ev, tgt.Character)
+								end
+							end
+						end
+						task.wait(0.05)
+					else
+						task.wait(0.1)
+					end
+				else
+					task.wait(0.1)
+				end
+			end)
+			task.wait()
+		end
+	end)
+
+	-- Fly
+	local flyBV, flyBG
+	local function startFly()
+		local ch = LocalPlayer.Character; local hrp = getHRP(ch)
+		local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+		if not (hrp and hum) then return end
+		hum.PlatformStand = true
+		flyBV = Instance.new("BodyVelocity")
+		flyBV.MaxForce = Vector3.new(1, 1, 1) * 9e9
+		flyBV.P = 9e4
+		flyBV.Velocity = Vector3.zero
+		flyBV.Parent = hrp
+		flyBG = Instance.new("BodyGyro")
+		flyBG.MaxTorque = Vector3.new(1, 1, 1) * 9e9
+		flyBG.P = 9e4
+		flyBG.CFrame = hrp.CFrame
+		flyBG.Parent = hrp
+	end
+
+	local function stopFly()
+		local ch = LocalPlayer.Character; local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+		if hum then hum.PlatformStand = false end
+		if flyBV then flyBV:Destroy(); flyBV = nil end
+		if flyBG then flyBG:Destroy(); flyBG = nil end
+	end
+
+	monoBind(RunService.RenderStepped, function()
+		if not MonoFlags.fly or not flyBV then return end
+		local hrp = getHRP(LocalPlayer.Character); if not hrp then return end
+		local dir = Vector3.zero
+		local look, right = CurrentCamera.CFrame.LookVector, CurrentCamera.CFrame.RightVector
+		if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir = dir + look end
+		if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir = dir - look end
+		if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir = dir + right end
+		if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir = dir - right end
+		if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir = dir + Vector3.new(0, 1, 0) end
+		if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then dir = dir - Vector3.new(0, 1, 0) end
+		flyBV.Velocity = (dir.Magnitude > 0 and dir.Unit or Vector3.zero) * MonoFlags.flySpeed
+		flyBG.CFrame = CurrentCamera.CFrame
+	end)
+
+	-- Infinite Jump
+	monoBind(UserInputService.JumpRequest, function()
+		if MonoFlags.infJump then
+			local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+			if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+		end
+	end)
+
+	-- Fullbright
+	local lightStore = nil
+	local function setFullbright(on)
+		if on then
+			if not lightStore then
+				lightStore = {
+					Lighting.Brightness, Lighting.ClockTime, Lighting.Ambient,
+					Lighting.OutdoorAmbient, Lighting.FogEnd, Lighting.FogStart
+				}
+			end
+			pcall(function()
+				Lighting.Brightness = math.max(Lighting.Brightness, 3)
+				Lighting.ClockTime = 14
+				Lighting.Ambient = Color3.new(1, 1, 1)
+				Lighting.OutdoorAmbient = Color3.new(1, 1, 1)
+				Lighting.FogStart = 1e6
+				Lighting.FogEnd = 1e6
+				Lighting.GlobalShadows = false
+			end)
+		elseif lightStore then
+			pcall(function()
+				Lighting.Brightness = lightStore[1]
+				Lighting.ClockTime = lightStore[2]
+				Lighting.Ambient = lightStore[3]
+				Lighting.OutdoorAmbient = lightStore[4]
+				Lighting.FogEnd = lightStore[5]
+				Lighting.FogStart = lightStore[6]
+			end)
+			lightStore = nil
+		end
+	end
+
+	-- Murderer Notify
+	local MURD_RANGE = 50
+	local murdNotified = false
+	monoBind(RunService.Heartbeat, function()
+		if not MonoFlags.murdererNotify then murdNotified = false return end
+		local hrp = getHRP(LocalPlayer.Character)
+		local m = findMurderer()
+		local mh = (m and m ~= LocalPlayer and alive(m)) and getHRP(m.Character) or nil
+		if not (hrp and mh) then murdNotified = false return end
+		local d = math.floor((mh.Position - hrp.Position).Magnitude)
+		if d <= MURD_RANGE and not murdNotified then
+			murdNotified = true
+			monoNotify("Murderer Nearby", (m.DisplayName or m.Name) .. " is " .. d .. "m away!", "alert-triangle", 4)
+		elseif d > MURD_RANGE then
+			murdNotified = false
+		end
+	end)
+
+	-- Kill Feed
+	local lastDead = {}
+	local function scanDeaths()
+		if not (CRC and CRC.PlayerData) then return end
+		for name, d in pairs(CRC.PlayerData) do
+			local dead = (d.Dead == true)
+			local was = lastDead[name]
+			if was == false and dead then
+				local p = Players:FindFirstChild(name)
+				local role = p and roleOf(p) or "Innocent"
+				local tag = role == "Murderer" and "[M]" or isGunRole(role) and "[S]" or "[I]"
+				monoNotify("Kill Feed", tag .. " " .. name .. " eliminated", "skull", 3)
+			end
+			lastDead[name] = dead
+		end
+	end
+
+	task.spawn(function()
+		while true do
+			if MonoFlags.killFeed then scanDeaths() end
+			task.wait(0.3)
+		end
+	end)
+
+	-- Fling
+	local flinging = false
+	local function flingPlayer(p)
+		if flinging then return false end
+		local myHrp = getHRP(LocalPlayer.Character)
+		local tHrp = p and p.Character and getHRP(p.Character)
+		if not (myHrp and tHrp) then return false end
+		local back = myHrp.CFrame
+		flinging = true
+		local t0 = os.clock()
+		while os.clock() - t0 < MonoFlags.flingSeconds do
+			RunService.Heartbeat:Wait()
+			local h = getHRP(LocalPlayer.Character)
+			local t = p.Character and getHRP(p.Character)
+			if not (h and t and h.Parent and t.Parent) then break end
+			h.CFrame = t.CFrame
+			local vel = h.AssemblyLinearVelocity
+			h.AssemblyLinearVelocity = vel * MonoFlags.flingPower + Vector3.new(0, MonoFlags.flingPower, 0)
+			RunService.RenderStepped:Wait()
+			if not h.Parent then break end
+			h.AssemblyLinearVelocity = vel
+			RunService.Stepped:Wait()
+		end
+		local h2 = getHRP(LocalPlayer.Character)
+		if h2 then
+			h2.CFrame = back
+			h2.AssemblyLinearVelocity = Vector3.zero
+			h2.AssemblyAngularVelocity = Vector3.zero
+		end
+		flinging = false
+		return true
+	end
+
+	-- Gun/Knife Through Walls
+	local wallSnapPos, wallFarPos, myHrpPos
+	local function wallAimPos()
+		local center = UserInputService:GetMouseLocation()
+		local ray = CurrentCamera:ViewportPointToRay(center.X, center.Y)
+		local origin, dir = ray.Origin, ray.Direction.Unit
+		local far = origin + dir * 300
+		local chars = {}
+		for _, p in ipairs(Players:GetPlayers()) do
+			if p ~= LocalPlayer and alive(p) and p.Character then
+				table.insert(chars, p.Character)
+			end
+		end
+		if #chars == 0 then return nil, far end
+		local params = RaycastParams.new()
+		params.FilterType = Enum.RaycastFilterType.Include
+		params.FilterDescendantsInstances = chars
+		local hit = workspace:Raycast(origin, dir * 300, params)
+		if hit then return hit.Position, far end
+		local best, bd
+		for _, p in ipairs(Players:GetPlayers()) do
+			if p ~= LocalPlayer and alive(p) then
+				local hrp = getHRP(p.Character)
+				if hrp then
+					local sp = CurrentCamera:WorldToViewportPoint(hrp.Position)
+					if sp.Z > 0 then
+						local d = (Vector2.new(sp.X, sp.Y) - center).Magnitude
+						if d <= aimFov and (not bd or d < bd) then
+							bd = d
+							best = hrp.Position
+						end
+					end
+				end
+			end
+		end
+		return best, far
+	end
+
+	monoBind(RunService.Heartbeat, function()
+		if MonoFlags.gunWalls or MonoFlags.knifeWalls then
+			wallSnapPos, wallFarPos = wallAimPos()
+		else
+			wallSnapPos, wallFarPos = nil, nil
+		end
+		local h = getHRP(LocalPlayer.Character)
+		myHrpPos = h and h.Position or nil
+	end)
+
+	local hookOk = pcall(function()
+		if typeof(hookmetamethod) ~= "function" or typeof(newcclosure) ~= "function"
+			or typeof(checkcaller) ~= "function" or typeof(getnamecallmethod) ~= "function" then
+			error("no hooking support")
+		end
+		local oldNamecall
+		oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+			if not checkcaller() and getnamecallmethod() == "FireServer" then
+				local nm = self.Name
+				if nm == "Shoot" and MonoFlags.gunWalls then
+					local n = select("#", ...)
+					if n >= 2 then
+						local a = { ... }
+						if typeof(a[2]) == "CFrame" and wallSnapPos then
+							a[2] = CFrame.new(wallSnapPos)
+							if myHrpPos and typeof(a[1]) == "CFrame" then
+								local tp = wallSnapPos
+								local d = tp - myHrpPos
+								d = (d.Magnitude > 0.1) and d.Unit or Vector3.new(0, 0, -1)
+								a[1] = CFrame.new(tp - d * 2, tp)
+							end
+							return oldNamecall(self, table.unpack(a, 1, n))
+						end
+					end
+				elseif nm == "KnifeThrown" and MonoFlags.knifeWalls then
+					local n = select("#", ...)
+					if n >= 2 then
+						local a = { ... }
+						if typeof(a[2]) == "CFrame" then
+							local target = wallSnapPos or wallFarPos
+							if target then
+								a[2] = CFrame.new(target)
+								if myHrpPos and typeof(a[1]) == "CFrame" then
+									local d = target - myHrpPos
+									d = (d.Magnitude > 0.1) and d.Unit or Vector3.new(0, 0, -1)
+									a[1] = CFrame.new(target - d * 2, target)
+								end
+								return oldNamecall(self, table.unpack(a, 1, n))
+							end
+						end
+					end
+				end
+			end
+			return oldNamecall(self, ...)
+		end))
+	end)
+
+	if not hookOk then
+		monoBind(UserInputService.InputBegan, function(input, processed)
+			if processed then return end
+			local it = input.UserInputType
+			if it ~= Enum.UserInputType.MouseButton1 and it ~= Enum.UserInputType.Touch then return end
+			if not (MonoFlags.gunWalls or MonoFlags.knifeWalls) then return end
+			task.spawn(function()
+				local ch = LocalPlayer.Character
+				if not ch then return end
+				local mine = getHRP(ch)
+				if not mine then return end
+				local gun = ch:FindFirstChild("Gun")
+				if gun and gun:FindFirstChild("Shoot") and MonoFlags.gunWalls then
+					local snap = wallSnapPos
+					if snap then
+						local d = snap - mine.Position
+						d = (d.Magnitude > 0.1) and d.Unit or Vector3.new(0, 0, -1)
+						pcall(function()
+							gun.Shoot:FireServer(CFrame.new(snap - d * 2, snap), CFrame.new(snap))
+						end)
+					end
+					return
+				end
+				local knife = ch:FindFirstChild("Knife")
+				local ev = knife and knife:FindFirstChild("Events")
+				local thrown = ev and ev:FindFirstChild("KnifeThrown")
+				if thrown and MonoFlags.knifeWalls then
+					local snap = wallSnapPos or wallFarPos
+					if snap then
+						local d = snap - mine.Position
+						d = (d.Magnitude > 0.1) and d.Unit or Vector3.new(0, 0, -1)
+						pcall(function()
+							thrown:FireServer(CFrame.new(snap - d * 2, snap), CFrame.new(snap))
+						end)
+					end
+				end
+			end)
+		end)
+	end
+
 	-- ==========================================
 	-- MAIN TAB CONTENT
 	-- ==========================================
@@ -593,6 +1110,31 @@ Tips:
 			updateCharacter();
 		end
 	});
+
+	Tabs.CharacterTab:Section({
+		Title = "Movement (Mono)"
+	});
+
+	Tabs.CharacterTab:Toggle({
+		Title = "Fly",
+		Default = false,
+		Callback = function(v)
+			MonoFlags.fly = v
+			if v then startFly() else stopFly() end
+		end
+	});
+
+	Tabs.CharacterTab:Slider({
+		Title = "Fly Speed",
+		Value = { Min = 20, Max = 250, Default = 60 },
+		Callback = function(v) MonoFlags.flySpeed = v end
+	});
+
+	Tabs.CharacterTab:Toggle({
+		Title = "Infinite Jump",
+		Default = false,
+		Callback = function(v) MonoFlags.infJump = v end
+	});
 	
 	-- ==========================================
 	-- ESP TAB (WITH DRAWING ESP ADDED)
@@ -833,6 +1375,16 @@ Tips:
 		end
 	});
 	
+	Tabs.EspTab:Section({
+		Title = "World (Mono)"
+	});
+
+	Tabs.EspTab:Toggle({
+		Title = "Fullbright",
+		Default = false,
+		Callback = function(v) MonoFlags.fullbright = v; setFullbright(v) end
+	});
+
 	Tabs.EspTab:Section({
 		Title = "Drawing ESP"
 	});
@@ -1099,6 +1651,51 @@ Tips:
 		end
 	});
 	
+	Tabs.TeleportTab:Section({
+		Title = "Fling (Mono)"
+	});
+
+	local flingTarget = nil
+	Tabs.TeleportTab:Dropdown({
+		Title = "Fling Target",
+		Values = (function()
+			local t = {}
+			for _, p in ipairs(Players:GetPlayers()) do
+				if p ~= LocalPlayer then table.insert(t, p.Name) end
+			end
+			if #t == 0 then t[1] = "(no players)" end
+			return t
+		end)(),
+		Value = "",
+		Callback = function(v) flingTarget = v end
+	});
+
+	Tabs.TeleportTab:Button({
+		Title = "Fling Player",
+		Callback = function()
+			local p = Players:FindFirstChild(flingTarget)
+			if not p then WindUI:Notify({Title="Fling", Content="Select a player first", Icon="x-circle", Duration=3}) return end
+			if not (p.Character and getHRP(p.Character)) then
+				WindUI:Notify({Title="Fling", Content="Player has no character", Icon="x-circle", Duration=3})
+				return
+			end
+			WindUI:Notify({Title="Fling", Content="Flinging " .. p.Name, Icon="info", Duration=3})
+			task.spawn(function() flingPlayer(p) end)
+		end
+	});
+
+	Tabs.TeleportTab:Slider({
+		Title = "Fling Power",
+		Value = { Min = 1000, Max = 50000, Default = 10000 },
+		Callback = function(v) MonoFlags.flingPower = v end
+	});
+
+	Tabs.TeleportTab:Slider({
+		Title = "Fling Duration (sec)",
+		Value = { Min = 1, Max = 10, Default = 1 },
+		Callback = function(v) MonoFlags.flingSeconds = v end
+	});
+
 	Tabs.TeleportTab:Button({
 		Title = "Teleport to Murderer",
 		Callback = function()
@@ -1140,7 +1737,29 @@ Tips:
 	-- AIMBOT TAB
 	-- ==========================================
 	Tabs.AimbotTab:Section({
-		Title = "Camera Aimbot"
+		Title = "Camera Aimbot (Mono)"
+	});
+
+	Tabs.AimbotTab:Toggle({
+		Title = "Camera Aimbot",
+		Default = false,
+		Callback = function(v) MonoFlags.aimbot = v end
+	});
+
+	Tabs.AimbotTab:Toggle({
+		Title = "Show FOV Circle",
+		Default = false,
+		Callback = function(v) MonoFlags.showFov = v end
+	});
+
+	Tabs.AimbotTab:Slider({
+		Title = "FOV Radius",
+		Value = { Min = 40, Max = 400, Default = 120 },
+		Callback = function(v) aimFov = v end
+	});
+
+	Tabs.AimbotTab:Section({
+		Title = "Camera Aimbot (Original)"
 	});
 	
 	local AimbotConfig = {
@@ -2141,6 +2760,18 @@ Tips:
 			attackDelay = value;
 		end
 	});
+
+	Tabs.MurderTab:Toggle({
+		Title = "Knife Through Walls",
+		Default = false,
+		Callback = function(v) MonoFlags.knifeWalls = v end
+	});
+
+	Tabs.MurderTab:Toggle({
+		Title = "Auto Kill (Instant)",
+		Default = false,
+		Callback = function(v) MonoFlags.autoKill = v end
+	});
 	
 	Tabs.MurderTab:Button({
 		Title = "Equip Knife",
@@ -2273,6 +2904,12 @@ Tips:
 		Callback = function(selected)
 			ShootType = selected;
 		end
+	});
+
+	Tabs.SheriffTab:Toggle({
+		Title = "Gun Through Walls",
+		Default = false,
+		Callback = function(v) MonoFlags.gunWalls = v end
 	});
 	
 	Tabs.SheriffTab:Section({
@@ -3460,6 +4097,22 @@ Features:
 	-- ==========================================
 	local EvasionSystem = {Enabled=false, TriggerDistance=35, Connection=nil}
 	local MurdSystem = {PredictiveDodge=false, DodgeConnection=nil}
+
+	Tabs.InnocentTab:Section({
+		Title = "Awareness (Mono)"
+	});
+
+	Tabs.InnocentTab:Toggle({
+		Title = "Murderer Notify",
+		Default = false,
+		Callback = function(v) MonoFlags.murdererNotify = v end
+	});
+
+	Tabs.InnocentTab:Toggle({
+		Title = "Kill Feed",
+		Default = false,
+		Callback = function(v) MonoFlags.killFeed = v end
+	});
 
 	Tabs.InnocentTab:Section({
 		Title = "Murderer Evasion"
