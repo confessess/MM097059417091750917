@@ -961,8 +961,7 @@ task.spawn(function()
             if gunEspHL then gunEspHL.Enabled = false end
             if gunEspBB then gunEspBB.Enabled = false end
             task.wait(0.5)
-            continue
-        end
+        else
         local h = droppedGun
         if h and h.Parent then
             if not gunEspHL then
@@ -988,6 +987,7 @@ task.spawn(function()
         else
             if gunEspHL then gunEspHL.Enabled = false end
             if gunEspBB then gunEspBB.Enabled = false end
+        end
         end
         task.wait(0.1)
     end
@@ -1265,8 +1265,7 @@ task.spawn(function()
         if not anyEsp then
             if next(espStore) then for p in pairs(espStore) do clearEsp(p) end end
             task.wait(0.5)
-            continue
-        end
+        else
         if Mono._rnFlag ~= flags.espNames or os.clock() - (Mono._rnAt or 0) > 0.5 then
             Mono._rnFlag = flags.espNames
             Mono._rnAt = os.clock()
@@ -1354,6 +1353,7 @@ task.spawn(function()
             end
         end
         task.wait(0.05)
+        end
     end
 end)
 
@@ -1541,8 +1541,7 @@ bind(RunService.RenderStepped, function()
                     if ht then ht.Visible = false end
                     local hs = skelStore[plr]
                     if hs then for i = 1, #hs.lines do local l = hs.lines[i]; if l then l.Visible = false end end end
-                    continue
-                end
+                else
                 local col = espColor(Mono.espRole(plr))
                 local pts, okPts
                 local bx1, by1, bx2, by2
@@ -1661,6 +1660,7 @@ bind(RunService.RenderStepped, function()
                             end
                         end
                     end
+                end
                 end
             else
                 if doBox then clearBox(plr) end
@@ -2131,7 +2131,7 @@ local function setFPSBoost(on)
             for _, e in ipairs(Lighting:GetDescendants()) do fxKill(e, s) end
             for _, e in ipairs(workspace:GetDescendants()) do
                 if not (flags.fpsBoost and fpsStore and fpsStore.changed == s) then return end
-                fxKill(e, s); n += 1; if n % 900 == 0 then RunService.Heartbeat:Wait() end
+                fxKill(e, s); n = n + 1; if n % 900 == 0 then RunService.Heartbeat:Wait() end
             end
         end)
     elseif fpsStore then
@@ -2159,7 +2159,7 @@ local function setFPSBoost(on)
                     end
                 end)
                 s[e] = nil
-                n += 1; if n % 900 == 0 then RunService.Heartbeat:Wait() end
+                n = n + 1; if n % 900 == 0 then RunService.Heartbeat:Wait() end
             end
             if Mono.fxPending == s then Mono.fxPending = nil end
         end)
@@ -2303,18 +2303,18 @@ bind(RunService.RenderStepped, function()
     local hrp = getHRP(LocalPlayer.Character); if not hrp then return end
     local dir = Vector3.zero
     local look, right = Camera.CFrame.LookVector, Camera.CFrame.RightVector
-    if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir += look end
-    if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir -= look end
-    if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir += right end
-    if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir -= right end
-    if UserInputService:IsKeyDown(Enum.KeyCode.Space) or Mono.mobUp then dir += Vector3.new(0, 1, 0) end
-    if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or Mono.mobDown then dir -= Vector3.new(0, 1, 0) end
+    if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir = dir + look end
+    if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir = dir - look end
+    if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir = dir + right end
+    if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir = dir - right end
+    if UserInputService:IsKeyDown(Enum.KeyCode.Space) or Mono.mobUp then dir = dir + Vector3.new(0, 1, 0) end
+    if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or Mono.mobDown then dir = dir - Vector3.new(0, 1, 0) end
     if dir.Magnitude == 0 then
         local c = getControls()
         local mv = c and c:GetMoveVector()
         if mv and mv.Magnitude > 0 then dir = dir + (look * (-mv.Z)) + (right * mv.X) end
     end
-    if os.clock() - lastJumpAt < 0.25 then dir += Vector3.new(0, 1, 0) end
+    if os.clock() - lastJumpAt < 0.25 then dir = dir + Vector3.new(0, 1, 0) end
     flyBV.Velocity = (dir.Magnitude > 0 and dir.Unit or Vector3.zero) * flags.flySpeed
     flyBG.CFrame = Camera.CFrame
 end)
@@ -4281,7 +4281,7 @@ task.spawn(function()
         local up = math.floor(workspace.DistributedGameTime)
         local txt = string.format("Players: %d/%d  |  Uptime: %dh %dm %ds  |  Ping: %s",
             #Players:GetPlayers(), Players.MaxPlayers,
-            up // 3600, (up % 3600) // 60, up % 60,
+            math.floor(up / 3600), math.floor((up % 3600) / 60), up % 60,
             ok and ping or "?")
         pcall(function() serverInfoLabel:Set(txt) end)
         task.wait(1)
