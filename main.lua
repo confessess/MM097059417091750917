@@ -771,14 +771,14 @@ do
 	
 	Tabs.MainTab:Code({
 		Title = "Keybinds:",
-		Code = [[• Ctrl + M - Toggle Script On/Off
-• Auto shoot - Activate Silent Aimbot
-• GUI Tabs - Access all features
+		Code = [[* Ctrl + M - Toggle Script On/Off
+* Auto shoot - Activate Silent Aimbot
+* GUI Tabs - Access all features
 
 Tips:
-• Use ESP to find Murderer/Sheriff
-• Silent Aimbot works when holding right-click
-• Shoot Button appears for Sheriff]]
+* Use ESP to find Murderer/Sheriff
+* Silent Aimbot works when holding right-click
+* Shoot Button appears for Sheriff]]
 	});
 	
 	Tabs.MainTab:Section({
@@ -1324,7 +1324,7 @@ Tips:
 					if ESPConfig.Alerts and KnownMurderer ~= Murder then
 						KnownMurderer = Murder
 						WindUI:Notify({
-							Title = "⚠️ Murderer Detected ⚠️",
+							Title = "! Murderer Detected !",
 							Content = Murder .. " is the Murderer!",
 							Icon = "alert-triangle",
 							Duration = 6
@@ -2079,10 +2079,10 @@ Tips:
 4. If the Murderer enters your circle, the script shoots them automatically!
 
 Tips:
-• The camera will not snap (True Silent Aim).
-• Adjust FOV to make the detection circle wider or smaller.
-• Prediction adjusts automatically to the target.
-• Target Part: Head = Best chance of bypassing hit-reg delays.]]
+* The camera will not snap (True Silent Aim).
+* Adjust FOV to make the detection circle wider or smaller.
+* Prediction adjusts automatically to the target.
+* Target Part: Head = Best chance of bypassing hit-reg delays.]]
 	});
 	
 	-- ==========================================
@@ -3215,26 +3215,26 @@ Tips:
 		Title = "v2.0 - Fixed Update",
 		Code = [[
 Features:
-• Fixed connection tracking and cleanup
-• Fixed master Ctrl+M toggle state
-• Added Murderer Evasion System
-• Added Predictive Gun Dodging
-• Added advanced local protection tools
-• Improved nil-safety and role-update throttling
-• Full ESP (Murderer, Sheriff, Innocent, GunDrop)
-• Drawing ESP (Name, Box, Tracers)
-• Silent Aimbot (Hold Right Click)
-• Smooth Camera Aimbot (Spectate & Lock)
-• AutoFarm (Coins, Beach Balls, Eggs)
-• Teleport System
-• Kill All (Murderer)
-• Auto Grab Gun & Shoot
-• Shoot Button for Mobile
-• Murderer Detection Alerts
-• Auto Report System
-• Server Hop & Fast API Management
-• Theme Customization
-• Ctrl+M Toggle System
+* Fixed connection tracking and cleanup
+* Fixed master Ctrl+M toggle state
+* Added Murderer Evasion System
+* Added Predictive Gun Dodging
+* Added advanced local protection tools
+* Improved nil-safety and role-update throttling
+* Full ESP (Murderer, Sheriff, Innocent, GunDrop)
+* Drawing ESP (Name, Box, Tracers)
+* Silent Aimbot (Hold Right Click)
+* Smooth Camera Aimbot (Spectate & Lock)
+* AutoFarm (Coins, Beach Balls, Eggs)
+* Teleport System
+* Kill All (Murderer)
+* Auto Grab Gun & Shoot
+* Shoot Button for Mobile
+* Murderer Detection Alerts
+* Auto Report System
+* Server Hop & Fast API Management
+* Theme Customization
+* Ctrl+M Toggle System
 ]]
 	});
 	
@@ -3778,7 +3778,8 @@ Features:
 
 		-- ==========================================
 	-- MASTER TOGGLE / CLEANUP
-	-- ==========================================criptEnabled = enabled
+	-- ==========================================
+	local function SetSystemsEnabled(enabled)
 		if not enabled then
 			if SilentAimbot.Connection then
 				SilentAimbot.Connection:Disconnect()
