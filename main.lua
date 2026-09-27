@@ -1,5 +1,55 @@
+-- ============================================================
+-- LIGHT HUB MM2 - COMBINED
+-- Merged from Mono MM2 (Fleece) + WindUI MM2 (Feuds)
+-- GUI: AIRFLOW (github.com/confessess/AIRFLOW0978109571095710975)
+-- ============================================================
 
-local AirFlow = loadstring(game:HttpGet("https://raw.githubusercontent.com/confessess/AIRFLOW0978109571095710975/main/source.lua"))()
+-- ============================================================
+-- LIGHT HUB MM2 - PART 1: CORE
+-- Merged from Mono MM2 (Fleece) + WindUI MM2 (Feuds)
+-- GUI: AIRFLOW
+-- ============================================================
+
+local AirFlow
+local loader = loadstring or load
+if type(loader) ~= "function" then
+    warn("[LightHub] loadstring/load is unavailable in this executor.")
+    return
+end
+
+local fetchSource = game.HttpGet
+if type(fetchSource) ~= "function" then
+    if syn and type(syn.request) == "function" then
+        fetchSource = function(_, url)
+            local res = syn.request({ Url = url, Method = "GET" })
+            if res and res.StatusCode == 200 then
+                return res.Body
+            end
+            return nil
+        end
+    end
+end
+
+if type(fetchSource) ~= "function" then
+    warn("[LightHub] HttpGet is unavailable in this executor.")
+    return
+end
+
+local success, raw = pcall(function()
+    return fetchSource(game, "https://raw.githubusercontent.com/confessess/AIRFLOW0978109571095710975/main/source.lua")
+end)
+if not success or type(raw) ~= "string" or raw == "" then
+    warn("[LightHub] Failed to fetch AirFlow source.")
+    return
+end
+
+success, AirFlow = pcall(function()
+    return loader(raw)()
+end)
+if not success or type(AirFlow) ~= "table" then
+    warn("[LightHub] Failed to initialize AirFlow UI library.")
+    return
+end
 
 local Players          = game:GetService("Players")
 local RunService       = game:GetService("RunService")
