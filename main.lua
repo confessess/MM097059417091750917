@@ -10,45 +10,47 @@
 -- GUI: AIRFLOW
 -- ============================================================
 
-local AirFlow
-local loader = loadstring or load
-if type(loader) ~= "function" then
-    warn("[LightHub] loadstring/load is unavailable in this executor.")
-    return
-end
+local AIRFLOW_URL = "https://raw.githubusercontent.com/confessess/AIRFLOW0978109571095710975/main/source.lua"
 
-local fetchSource = game.HttpGet
-if type(fetchSource) ~= "function" then
-    if syn and type(syn.request) == "function" then
-        fetchSource = function(_, url)
-            local res = syn.request({ Url = url, Method = "GET" })
-            if res and res.StatusCode == 200 then
-                return res.Body
-            end
-            return nil
-        end
+local function fetchUrl(url)
+    -- Try game:HttpGet first
+    local ok, res = pcall(function() return game:HttpGet(url) end)
+    if ok and type(res) == "string" and #res > 100 then return res end
+    -- Try request() if available
+    if typeof(request) == "function" then
+        local ok2, r = pcall(function()
+            return request({ Url = url, Method = "GET" })
+        end)
+        if ok2 and r and type(r.Body) == "string" and #r.Body > 100 then return r.Body end
     end
+    -- Try http_request
+    if typeof(http_request) == "function" then
+        local ok3, r = pcall(function()
+            return http_request({ Url = url, Method = "GET" })
+        end)
+        if ok3 and r and type(r.Body) == "string" and #r.Body > 100 then return r.Body end
+    end
+    return nil
 end
 
-if type(fetchSource) ~= "function" then
-    warn("[LightHub] HttpGet is unavailable in this executor.")
-    return
-end
-
-local success, raw = pcall(function()
-    return fetchSource(game, "https://raw.githubusercontent.com/confessess/AIRFLOW0978109571095710975/main/source.lua")
-end)
-if not success or type(raw) ~= "string" or raw == "" then
-    warn("[LightHub] Failed to fetch AirFlow source.")
-    return
-end
-
-success, AirFlow = pcall(function()
-    return loader(raw)()
-end)
-if not success or type(AirFlow) ~= "table" then
-    warn("[LightHub] Failed to initialize AirFlow UI library.")
-    return
+local AirFlow
+do
+    local raw = fetchUrl(AIRFLOW_URL)
+    if not raw then
+        error("[LightHub] Could not download AIRFLOW UI from GitHub. Check your executor's HTTP access.")
+    end
+    local chunk, loadErr = loadstring(raw)
+    if not chunk then
+        error("[LightHub] AIRFLOW failed to compile: " .. tostring(loadErr))
+    end
+    local ok, result = pcall(chunk)
+    if not ok then
+        error("[LightHub] AIRFLOW crashed on load: " .. tostring(result))
+    end
+    if type(result) ~= "table" then
+        error("[LightHub] AIRFLOW returned unexpected type: " .. type(result))
+    end
+    AirFlow = result
 end
 
 local Players          = game:GetService("Players")
