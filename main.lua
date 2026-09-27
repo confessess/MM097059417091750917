@@ -1942,20 +1942,6 @@ do
 		end
 	});
 	
-	Tabs.AimbotTab:Code({
-		Title = "How to use:",
-		Code = [[Silent Auto-Shoot Instructions:
-1. Enable Silent Auto-Shoot.
-2. Hold your Gun out.
-3. Keep the FOV circle near doorways or paths.
-4. If the Murderer enters your circle, the script shoots them automatically!
-
-Tips:
-* The camera will not snap (True Silent Aim).
-* Adjust FOV to make the detection circle wider or smaller.
-* Prediction adjusts automatically to the target.
-* Target Part: Head = Best chance of bypassing hit-reg delays.]]
-	});
 	
 	-- ==========================================
 	-- AUTOFARM TAB
