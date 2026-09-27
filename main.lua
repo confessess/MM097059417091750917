@@ -1000,7 +1000,7 @@ do
 	});
 
 	Tabs.CharacterTab:Section({
-		Title = "Movement (Mono)"
+		Title = "Movement"
 	});
 
 	Tabs.CharacterTab:Toggle({
@@ -1264,7 +1264,7 @@ do
 	});
 	
 	Tabs.EspTab:Section({
-		Title = "World (Mono)"
+		Title = "World"
 	});
 
 	Tabs.EspTab:Toggle({
@@ -1540,7 +1540,7 @@ do
 	});
 	
 	Tabs.TeleportTab:Section({
-		Title = "Fling (Mono)"
+		Title = "Fling"
 	});
 
 	local flingTarget = nil
@@ -1625,7 +1625,7 @@ do
 	-- AIMBOT TAB
 	-- ==========================================
 	Tabs.AimbotTab:Section({
-		Title = "Camera Aimbot (Mono)"
+		Title = "Camera Aimbot (New Method)"
 	});
 
 	Tabs.AimbotTab:Toggle({
@@ -3278,7 +3278,7 @@ do
 	local MurdSystem = {PredictiveDodge=false, DodgeConnection=nil}
 
 	Tabs.InnocentTab:Section({
-		Title = "Awareness (Mono)"
+		Title = "Awareness"
 	});
 
 	Tabs.InnocentTab:Toggle({
